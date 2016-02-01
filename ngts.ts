@@ -1,2 +1,3 @@
-﻿export * from "./ngts/decorators";
+﻿// Angular TypeScript bootstrapper
+export * from "./ngts/decorators";
 export * from "./ngts/bootstrapper";
