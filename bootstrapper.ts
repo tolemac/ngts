@@ -1,5 +1,4 @@
-﻿import * as Const from "./const";
-import {IInjectableMetadata, IInjectableType} from "./decorators/injectable";
+﻿import {IInjectableMetadata, IInjectableType} from "./decorators/injectable";
 import {IDirectiveMetadata, IDirectiveType} from "./decorators/directive";
 import {IComponentMetadata, IComponentType, setComponent$routeConfig} from "./decorators/component";
 import * as Common from "./common";
@@ -10,6 +9,7 @@ export class Bootstrapper {
     static injectables: IInjectableType[] = [];
     static components: IComponentType[] = [];
     static directives: IDirectiveType[] = [];
+    static defaultControllerAs : string;
 
     static AddInjectable(injectable: IInjectableType) {
         this.injectables.push(injectable);
@@ -54,6 +54,11 @@ export class ModuleBootstrapper {
         });
 
         this.directives.forEach((item: IDirectiveType) => {
+            // Establecer controller as por defecto si se ha indicado.
+            if (!item.$directiveMetadata.controllerAs && Bootstrapper.defaultControllerAs) {
+                item.$directiveMetadata.controllerAs = Bootstrapper.defaultControllerAs;
+            }
+            
             // Establecer $inject.
             setTarget$Inject(item, item.$directiveMetadata);
 
@@ -67,13 +72,11 @@ export class ModuleBootstrapper {
             // Crear el directive factory y pasar opciones que van al factory
             const factory: any = () => ddo;
 
-            angular.forEach(ddo, function (val, key) {
-                if (key.charAt(0) === '$') {
+            angular.forEach(ddo, (val, key) => {
+                if (key.charAt(0) === "$") {
                     factory[key] = val;
                 }
             });
-            //factory.$inject = ['$injector'];            
-
 
             // registrar la directiva.
             this.app.directive(directiveName, factory);
@@ -88,6 +91,11 @@ export class ModuleBootstrapper {
         });
 
         this.components.forEach((item: IComponentType) => {
+            // Establecer controller as por defecto si se ha indicado.
+            if (!item.$componentMetadata.controllerAs && Bootstrapper.defaultControllerAs) {
+                item.$componentMetadata.controllerAs = Bootstrapper.defaultControllerAs;
+            }
+
             if (!item.$componentMetadata.restrict) {
                 item.$componentMetadata.restrict = "AE";
             }
@@ -116,7 +124,7 @@ export class ModuleBootstrapper {
     }
 
     private bootstrapInternal() {
-        angular.bootstrap(document, [this.moduleName]);
+        angular.bootstrap(document.documentElement, [this.moduleName]);
     }
 
     addInjectable(injectable: IInjectableType) {
@@ -139,13 +147,15 @@ export class ModuleBootstrapper {
             this.dependencies.push(dependency);
     }
 
-    createModule() {
+    createModule(configuration?: any[], components?: any[]) {
         this.app = angular.module(this.moduleName, this.dependencies || []);
         decorateController(this.app);
         this.registerItems();
+        if (configuration)
+            this.app.config(configuration);
     }
 
-    bootStrap(component?: any[]) {
+    bootStrap(configuration?, components?: any[]) {
         // Asumir que los tipos registrados con module: "auto" son para el módulo que arranca.
         Bootstrapper.injectables.forEach((item) => {
             if (item.$injectableMetadata.module === "auto")
@@ -160,7 +170,7 @@ export class ModuleBootstrapper {
                 item.$componentMetadata.module = this.moduleName;
         });
 
-        this.createModule();
+        this.createModule(configuration, components);
         this.bootstrapInternal();
     }
 }
@@ -177,25 +187,25 @@ function compilerProviderDecorator($compileProvider) {
 }
 
 function decorateController(app: ng.IModule) {
-    angular.module('ng').config(["$compileProvider", compilerProviderDecorator]);
+    angular.module("ng").config(["$compileProvider", compilerProviderDecorator]);
 
     app.config(["$provide", ($provide: ng.auto.IProvideService) => {
         $provide.decorator("$controller", ["$injector", "$delegate", ($injector, $delegate) => {
             const origDelegate = $delegate;
 
-            return function (_class, scope) {
+            return function (_class) {
                 const component = origDelegate.apply(this, arguments);
 
-                if (_class.$routeConfig && $injector.has("$router")) {
+                if (_class.$routeConfig && $injector.has("$rootRouter")) {
                     if (!thereIsRouterRootComponent) {
-                        const factory = directiveFactory[Common.serviceNormalize(_class.name)];
+                        const factory = directiveFactory[Common.serviceNormalize(_class.name as string)];
                         delete factory.$routeConfig;
-                        const $router = $injector.get("$router");
+                        const $router = $injector.get("$rootRouter");
                         $router.config(_class.$routeConfig);
                         thereIsRouterRootComponent = true;
                     }
                     else {
-                        $injector.get("$router");
+                        $injector.get("$rootRouter");
                     }
                 }
                 

@@ -21,7 +21,9 @@ export function setComponent$routeConfig(target: IComponentType, metadata: IComp
  */
 export function Component(metadata: IComponentMetadata) {
     return (target: IComponentType) => {
-        metadata = target.$componentMetadata = angular.extend(/*target.$componentMetadata ||*/ {}, metadata);
+        if (target.$componentMetadata && target.$componentMetadata.module)
+            delete target.$componentMetadata.module;
+        metadata = target.$componentMetadata = angular.extend({}, target.$componentMetadata, metadata);
 
         updateTargetMetadata(target, metadata);
 

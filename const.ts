@@ -1,1 +1,0 @@
-﻿export const APPLICATION_MODULE_NAME = "emApp";
