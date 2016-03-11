@@ -3,6 +3,7 @@ import {Bootstrapper} from "../bootstrapper";
 
 export interface IComponentMetadata extends angular.IComponentOptions, IClassMetadata {
     directives?: (string | Function)[];
+    styles?: string | string[];
 }
 
 export interface IComponentType extends IClassType {

@@ -2,6 +2,8 @@
 import {Bootstrapper} from "../bootstrapper";
 
 export interface IDirectiveMetadata extends angular.IDirective, IClassMetadata {
+    directives?: (string | Function)[];
+    styles?: string | string[];
 }
 
 export interface IDirectiveType extends IClassType {

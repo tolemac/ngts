@@ -3,6 +3,7 @@ import {IDirectiveMetadata, IDirectiveType} from "./decorators/directive";
 import {IComponentMetadata, IComponentType, setComponent$routeConfig} from "./decorators/component";
 import * as Common from "./common";
 import {IClassMetadata, IClassType, setTarget$Inject} from "./decorators/metadata";
+import {registerStyles} from "./styles";
 
 export class Bootstrapper {
 
@@ -78,6 +79,8 @@ export class ModuleBootstrapper {
                 }
             });
 
+            registerStyles(item.$directiveMetadata.styles);
+
             // registrar la directiva.
             this.app.directive(directiveName, factory);
         });
@@ -107,6 +110,8 @@ export class ModuleBootstrapper {
             const options: ng.IComponentOptions = {
                 controller: item as any
             }
+
+            registerStyles(item.$componentMetadata.styles);
 
             // Añadir al ddo la información de la directiva.
             angular.extend(options, item.$componentMetadata);
