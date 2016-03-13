@@ -99,9 +99,11 @@ export class ModuleBootstrapper {
                 item.$componentMetadata.controllerAs = Bootstrapper.defaultControllerAs;
             }
 
-            if (!item.$componentMetadata.restrict) {
-                item.$componentMetadata.restrict = "AE";
-            }
+            // Commented due to Angular set "E" for all components
+            // if (!item.$componentMetadata.restrict) {
+            //     item.$componentMetadata.restrict = "AE";
+            // }
+            
             // Establecer $inject.
             setTarget$Inject(item, item.$componentMetadata);
             setComponent$routeConfig(item, item.$componentMetadata);
